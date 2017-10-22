@@ -1,0 +1,33 @@
+---
+- name: SQL Server Install
+  hosts: all
+  remote_user: john    
+
+  tasks:
+  - name: Add Microsoft Keys
+    become: true
+    raw: curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+
+  - name: Add Microsoft repository SQL Server
+    raw: sudo add-apt-repository "$(curl https://packages.microsoft.com/config/ubuntu/16.04/mssql-server-2017.list)"
+
+  - name: Add Microsoft repository SQL Tools
+    raw: sudo add-apt-repository "$(curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list)"
+
+  - name: apt update
+    become: true
+    apt: update_cache=yes
+
+  - name: Download SQL Server
+    apt:
+     name: mssql-server
+     state: present
+    become: true
+
+  - name: Install SQL Server
+    become: true
+    raw: MSSQL_PID=Developer ACCEPT_EULA=Y MSSQL_SA_PASSWORD='NeverSafe2day' /opt/mssql/bin/mssql-conf -n setup
+
+  - name: Install SQL Server ODBC Driver and Tools
+    become: true
+    raw: ACCEPT_EULA=Y apt-get install -y mssql-tools unixodbc-dev
