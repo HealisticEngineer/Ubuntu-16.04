@@ -1,0 +1,57 @@
+apt-get -y install winbind libpam-winbind libnss-winbind krb5-config
+
+nano /etc/samba/smb.conf
+
+   workgroup = LAB
+   password server = WIN-COP5H9SA2PG.lab.local
+   realm = LAB.LOCAL
+   security = ads
+   idmap config * : range = 16777216-33554431
+   template homedir = /home/%D/%U
+   template shell = /bin/bash
+   winbind use default domain = true
+   winbind offline logon = false
+
+
+nano /etc/nsswitch.conf
+ files winbind
+
+
+nano /etc/pam.d/common-session
+
+session optional        pam_mkhomedir.so skel=/etc/skel umask=077
+
+
+nano /etc/network/interfaces
+dns-nameservers 10.0.0.100
+
+systemctl restart networking
+
+net ads join -U Administrator 
+
+systemctl restart winbind
+systemctl restart smbd
+systemctl restart nmbd
+
+wbinfo -u 
+
+
+mkdir -p /sharing/{marketing,research}
+chmod -R 0770 /sharing/
+chgrp -R "Domain Users" /sharing/
+
+
+nano /etc/samba/smb.conf
+[Marketing]
+    comment = Marketing
+    path = /sharing/marketing/
+    valid users = "@Lab\Domain Users"
+    force group = "domain users"
+    writable = yes
+    read only = no
+    force create mode = 0660
+    create mask = 0777
+    directory mask = 0777
+    force directory mode = 0770
+    access based share enum = yes
+    hide unreadable = yes
