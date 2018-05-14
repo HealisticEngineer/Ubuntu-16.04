@@ -1,0 +1,63 @@
+# Import the public repository GPG keys
+curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+
+# Register the Microsoft Ubuntu repository
+curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list | sudo tee /etc/apt/sources.list.d/microsoft.list
+
+# Update the list of products
+sudo apt-get update
+
+# Install PowerShell
+sudo apt-get install -y powershell
+
+# Download and install the OMI (Open Management Infrastructure) package:
+wget https://github.com/Microsoft/omi/releases/download/v1.1.0-0/omi-1.1.0.ssl_100.x64.deb
+sudo dpkg -i ./omi-1.1.0.ssl_100.x64.deb
+# (Other OMI packages can be found at: https://github.com/Microsoft/omi/releases)
+# More information on OMI can be found at: https://github.com/Microsoft/omi
+
+# Download and install the DSC for Linux package:
+wget https://github.com/Microsoft/PowerShell-DSC-for-Linux/releases/download/v1.1.1-294/dsc-1.1.1-294.ssl_100.x64.deb
+sudo dpkg -i ./dsc-1.1.1-294.ssl_100.x64.deb
+# (Other packages can be found at: https://github.com/Microsoft/PowerShell-DSC-for-Linux/releases)
+
+# Restart OMI:
+sudo /opt/omi/bin/service_control restart
+
+# To check OMI:
+sudo /opt/omi/bin/omicli ei root/omi OMI_Identify
+
+# Run PowerShell and create a configuration:
+sudo pwsh
+
+# Download and install the nx Module:
+Install-Module nx
+
+# Create a configuration:
+Configuration myDscExample {
+    Import-DSCResource -Module PSDesiredStateConfiguration, nx
+    node localhost {
+        nxFile myTestFile {
+            Ensure          = "Present"
+            Type            = "File"
+            DestinationPath = "/tmp/helloFromDsc"
+            Contents        = "Hello DSC for Linux!"
+        }
+    }
+}
+
+# Run the configuration to generate the MOF file:
+myDscExample
+
+
+# Test to see that the file is not there (yet):
+ls /tmp/helloFromDsc
+
+# Start the DSC configuration to apply the previously created MOF:
+sudo /opt/microsoft/dsc/Scripts/StartDscConfiguration.py -configurationmof /home/vmadmin/myDscExample/localhost.mof
+
+# Check that the file is there now:
+ls /tmp/helloFromDsc
+
+# and that it contains the expected content:
+cat /tmp/helloFromDsc
