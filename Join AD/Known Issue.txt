@@ -1,9 +1,0 @@
-/etc/nsswitch.conf
-
-resolver issue can happen when the order is wrong.
-
-Original
-hosts:          files mdns4_minimal [NOTFOUND=return] dns
-
-Fixed
-hosts:          files dns mdns4_minimal [NOTFOUND=return]
