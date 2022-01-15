@@ -5,8 +5,8 @@ If you use a domain that ends .local then the mdns doesn't like it this can be f
 
 resolver issue can happen when the order is wrong.
 
-Original
+Original\
 hosts:          files mdns4_minimal [NOTFOUND=return] dns
 
-Fixed
+Fixed\
 hosts:          files dns mdns4_minimal [NOTFOUND=return]
